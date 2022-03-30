@@ -1,0 +1,37 @@
+#!/bin/bash
+
+threads=1
+environment="--env-file env.txt"
+container="maxcentre/yambo:5.1.0_gcc9"
+command_prefix=""
+
+### MAIN ###
+while [[ $1 == -* ]]; do
+    case $1 in
+        -t | --threads ) threads=$2
+			 shift 2
+			 ;;
+	-c | --container) container=$2
+			  shift 2
+			  ;;
+	-np | --nprocess ) command_prefix="mpirun --use-hwthread-cpus -np $2"
+			   shift 2
+			   ;;
+	--env-file ) environment="--env-file $2"
+		     shift 2
+		     ;;
+	-i | --init ) docker pull ${container}
+		      docker run -ti --user $(id -u):$(id -g) \
+			     --mount type=bind,source="$(pwd)",target=/scratch \
+			     ${container} cat /opt/spack/env.txt > env.txt
+		      exit 0
+		      ;;
+        * ) echo "Error: \"$1\" unrecognized argument."
+	    exit 1
+    esac
+done
+
+docker run -ti --user $(id -u):$(id -g) \
+       --mount type=bind,source="$(pwd)",target=/scratch \
+       -e OMP_NUM_THREADS=${threads} ${environment} \
+       ${container} ${command_prefix} $@
