@@ -1,9 +1,10 @@
 #!/bin/bash
 
 threads=1
-environment="--env-file env.txt"
+environment="./env.txt"
 container="maxcentre/yambo:5.1.0_gcc9"
 command_prefix=""
+init="no"
 
 ### MAIN ###
 while [[ $1 == -* ]]; do
@@ -17,21 +18,25 @@ while [[ $1 == -* ]]; do
 	-np | --nprocess ) command_prefix="mpirun --use-hwthread-cpus -np $2"
 			   shift 2
 			   ;;
-	--env-file ) environment="--env-file $2"
+	--env-file ) environment=$2
 		     shift 2
 		     ;;
-	-i | --init ) docker pull ${container}
-		      docker run -ti --user $(id -u):$(id -g) \
-			     --mount type=bind,source="$(pwd)",target=/scratch \
-			     ${container} cat /opt/spack/env.txt > env.txt
-		      exit 0
+	-i | --init ) init="yes"
+		      shift
 		      ;;
         * ) echo "Error: \"$1\" unrecognized argument."
 	    exit 1
     esac
 done
 
-docker run -ti --user $(id -u):$(id -g) \
-       --mount type=bind,source="$(pwd)",target=/scratch \
-       -e OMP_NUM_THREADS=${threads} ${environment} \
-       ${container} ${command_prefix} $@
+if [ "$init" == "yes" ]; then
+    docker pull ${container}
+    docker run -ti --user $(id -u):$(id -g) \
+	   --mount type=bind,source="$(pwd)",target=/scratch \
+	   ${container} cat /opt/spack/env.txt > ${environment}
+else
+    docker run -ti --user $(id -u):$(id -g) \
+	   --mount type=bind,source="$(pwd)",target=/scratch \
+	   -e OMP_NUM_THREADS=${threads} --env-file ${environment} \
+	   ${container} ${command_prefix} $@
+fi
