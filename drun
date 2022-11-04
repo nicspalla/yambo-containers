@@ -2,7 +2,7 @@
 
 threads=1
 environment="./env.txt"
-container="maxcentre/yambo:5.1.0_gcc9"
+container="maxcentre/yambo:5.1.1_gcc9"
 command_prefix=""
 init="no"
 
@@ -15,7 +15,7 @@ while [[ $1 == -* ]]; do
 	-c | --container) container=$2
 			  shift 2
 			  ;;
-	-np | --nprocess ) command_prefix="mpirun --use-hwthread-cpus -np $2"
+	-n | -np | --nprocess ) command_prefix="mpirun --use-hwthread-cpus -np $2"
 			   shift 2
 			   ;;
 	--env-file ) environment=$2

@@ -24,7 +24,9 @@ RUN cd /opt && git clone https://github.com/nicspalla/my-repo.git \
  && cd spack && git checkout releases/v0.18 && . share/spack/setup-env.sh \
  && printf "repos:\n  - /opt/my-repo\n  - $SPACK_ROOT/var/spack/repos/builtin\n" > $SPACK_ROOT/etc/spack/defaults/repos.yaml \
  && spack compiler find --scope site && spack external find --scope site \
- && spack install yambo@5.1.1%gcc@9.3.0 +mpi +openmp +ph +rt +sc +nl profile=time,memory linalg=slepc \
+ && spack install intel-oneapi-compilers@2022.1.0 \
+ && spack compiler add --scope site `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin/intel64 \
+ && spack install yambo@5.1.1%intel +mpi +openmp +ph +rt +sc +nl profile=time,memory linalg=slepc \
  && spack clean --stage && spack clean -a && spack clean --downloads && spack clean --misc-cache
 
 WORKDIR /scratch
